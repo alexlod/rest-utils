@@ -33,8 +33,22 @@ public class RestConfig extends AbstractConfig {
   protected static final boolean DEBUG_CONFIG_DEFAULT = false;
 
   public static final String PORT_CONFIG = "port";
-  protected static final String PORT_CONFIG_DOC = "Port to listen on for new connections.";
+  protected static final String PORT_CONFIG_DOC = "Port to listen on for new HTTP connections.";
   protected static final int PORT_CONFIG_DEFAULT = 8080;
+
+  public static final String PORT_HTTPS_CONFIG = "port.https";
+  protected static final String PORT_HTTPS_CONFIG_DOC = "Port to listen on for new HTTPS connections.";
+  protected static final int PORT_HTTPS_CONFIG_DEFAULT = 8081;
+
+  public static final String REST_PROTOCOL_HTTP = "http";
+  public static final String REST_PROTOCOL_HTTPS = "https";
+  public static final String REST_PROTOCOL_HTTP_PLUS_HTTPS =
+          REST_PROTOCOL_HTTP + "+" + REST_PROTOCOL_HTTPS;
+
+  public static final String REST_PROTOCOL_CONFIG = "rest.protocol";
+  protected static final String REST_PROTOCOL_DOC = "Which HTTP protocols to use. Possible values:" +
+      "http, https, http+https";
+  protected static final String REST_PROTOCOL_CONFIG_DEFAULT = REST_PROTOCOL_HTTP;
 
   public static final String RESPONSE_MEDIATYPE_PREFERRED_CONFIG = "response.mediatype.preferred";
   protected static final String RESPONSE_MEDIATYPE_PREFERRED_CONFIG_DOC =
@@ -93,13 +107,57 @@ public class RestConfig extends AbstractConfig {
       "<code>MetricReporter</code> interface allows plugging in classes that will be notified " +
       "of new metric creation. The JmxReporter is always included to register JMX statistics.";
   protected static final String METRICS_REPORTER_CLASSES_DEFAULT = "";
+  public static final String SSL_KEYSTORE_LOCATION_CONFIG = "ssl.keystore.location";
+  protected static final String SSL_KEYSTORE_LOCATION_DOC =
+      "Location of the keystore file to use for SSL. This is required for HTTPS.";
+  protected static final String SSL_KEYSTORE_LOCATION_DEFAULT = "";
+  public static final String SSL_KEYSTORE_PASSWORD_CONFIG = "ssl.keystore.password";
+  protected static final String SSL_KEYSTORE_PASSWORD_DOC =
+      "The store password for the keystore file.";
+  protected static final String SSL_KEYSTORE_PASSWORD_DEFAULT = "";
+  public static final String SSL_KEY_PASSWORD_CONFIG = "ssl.key.password";
+  protected static final String SSL_KEY_PASSWORD_DOC =
+      "The password of the private key in the keystore file.";
+  protected static final String SSL_KEY_PASSWORD_DEFAULT = "";
+  public static final String SSL_KEYSTORE_TYPE_CONFIG = "ssl.keystore.type";
+  protected static final String SSL_KEYSTORE_TYPE_DOC =
+      "The type of keystore file.";
+  protected static final String SSL_KEYSTORE_TYPE_DEFAULT = "JKS";
+  public static final String SSL_TRUSTSTORE_LOCATION_CONFIG = "ssl.truststore.location";
+  protected static final String SSL_TRUSTSTORE_LOCATION_DOC =
+      "Location of the trust store. Required only to authenticate HTTPS clients.";
+  protected static final String SSL_TRUSTSTORE_LOCATION_DEFAULT = "";
+  public static final String SSL_TRUSTSTORE_PASSWORD_CONFIG = "ssl.truststore.password";
+  protected static final String SSL_TRUSTSTORE_PASSWORD_DOC =
+      "The store password for the trust store file.";
+  protected static final String SSL_TRUSTSTORE_PASSWORD_DEFAULT = "";
+  public static final String SSL_TRUSTSTORE_TYPE_CONFIG = "ssl.truststore.type";
+  protected static final String SSL_TRUSTSTORE_TYPE_DOC =
+      "The type of trust store file.";
+  protected static final String SSL_TRUSTSTORE_TYPE_DEFAULT = "JKS";
+  public static final String SSL_PROTOCOL_CONFIG = "ssl.protocol";
+  protected static final String SSL_PROTOCOL_DOC =
+      "The SSL protocol used to generate the SslContextFactory.";
+  protected static final String SSL_PROTOCOL_DEFAULT = "TLS";
+  public static final String SSL_PROVIDER_CONFIG = "ssl.provider";
+  protected static final String SSL_PROVIDER_DOC =
+      "The SSL security provider name.";
+  protected static final String SSL_PROVIDER_DEFAULT = "";
+  public static final String SSL_CLIENT_AUTH_CONFIG = "ssl.client.auth";
+  protected static final String SSL_CLIENT_AUTH_DOC =
+      "Whether or not to require the https client to authenticate via the server's trust store.";
+  protected static final boolean SSL_CLIENT_AUTH_DEFAULT = false;
 
   public static ConfigDef baseConfigDef() {
     return new ConfigDef()
         .define(DEBUG_CONFIG, Type.BOOLEAN,
                 DEBUG_CONFIG_DEFAULT, Importance.LOW, DEBUG_CONFIG_DOC)
+        .define(REST_PROTOCOL_CONFIG, Type.STRING, REST_PROTOCOL_CONFIG_DEFAULT, Importance.HIGH,
+                REST_PROTOCOL_DOC)
         .define(PORT_CONFIG, Type.INT, PORT_CONFIG_DEFAULT, Importance.LOW,
                 PORT_CONFIG_DOC)
+        .define(PORT_HTTPS_CONFIG, Type.INT, PORT_HTTPS_CONFIG_DEFAULT, Importance.LOW,
+                PORT_HTTPS_CONFIG_DOC)
         .define(RESPONSE_MEDIATYPE_PREFERRED_CONFIG, Type.LIST,
                 RESPONSE_MEDIATYPE_PREFERRED_CONFIG_DEFAULT, Importance.LOW,
                 RESPONSE_MEDIATYPE_PREFERRED_CONFIG_DOC)
@@ -130,7 +188,40 @@ public class RestConfig extends AbstractConfig {
                 METRICS_SAMPLE_WINDOW_MS_DOC)
         .define(METRICS_NUM_SAMPLES_CONFIG, Type.INT,
                 METRICS_NUM_SAMPLES_DEFAULT, ConfigDef.Range.atLeast(1),
-                Importance.LOW, METRICS_NUM_SAMPLES_DOC);
+                Importance.LOW, METRICS_NUM_SAMPLES_DOC)
+        .define(SSL_KEYSTORE_LOCATION_CONFIG, Type.STRING,
+                SSL_KEYSTORE_LOCATION_DEFAULT, Importance.MEDIUM,
+                SSL_KEYSTORE_LOCATION_DOC)
+        .define(SSL_KEYSTORE_PASSWORD_CONFIG, Type.STRING,
+                SSL_KEYSTORE_PASSWORD_DEFAULT, Importance.MEDIUM,
+                SSL_KEYSTORE_PASSWORD_DOC)
+        .define(SSL_KEY_PASSWORD_CONFIG, Type.STRING,
+                SSL_KEY_PASSWORD_DEFAULT, Importance.MEDIUM,
+                SSL_KEY_PASSWORD_DOC)
+        .define(SSL_KEYSTORE_TYPE_CONFIG, Type.STRING,
+                SSL_KEYSTORE_TYPE_DEFAULT, Importance.LOW,
+                SSL_KEYSTORE_TYPE_DOC)
+        .define(SSL_TRUSTSTORE_LOCATION_CONFIG, Type.STRING,
+                SSL_TRUSTSTORE_LOCATION_DEFAULT, Importance.MEDIUM,
+                SSL_TRUSTSTORE_LOCATION_DOC)
+        .define(SSL_TRUSTSTORE_PASSWORD_CONFIG, Type.STRING,
+                SSL_TRUSTSTORE_PASSWORD_DEFAULT, Importance.MEDIUM,
+                SSL_TRUSTSTORE_PASSWORD_DOC)
+        .define(SSL_TRUSTSTORE_TYPE_CONFIG, Type.STRING,
+                SSL_TRUSTSTORE_TYPE_DEFAULT, Importance.MEDIUM,
+                SSL_TRUSTSTORE_TYPE_DOC)
+        .define(SSL_PROTOCOL_CONFIG, Type.STRING,
+                SSL_PROTOCOL_DEFAULT, Importance.LOW,
+                SSL_PROTOCOL_DOC)
+        .define(SSL_PROVIDER_CONFIG, Type.STRING,
+                SSL_PROVIDER_DEFAULT, Importance.LOW,
+                SSL_PROVIDER_DOC)
+        .define(SSL_CLIENT_AUTH_CONFIG, Type.BOOLEAN,
+                SSL_CLIENT_AUTH_DEFAULT, Importance.MEDIUM,
+                SSL_CLIENT_AUTH_DOC);
+
+    // TODO: support more SSL configuration options.
+
   }
 
   private static Time defaultTime = new SystemTime();
